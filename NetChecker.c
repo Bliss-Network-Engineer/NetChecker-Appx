@@ -2,6 +2,10 @@
 #include <windows.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+#include <winsock2.h>
+
+
 
 //presentation
 //input/choice
@@ -146,7 +150,31 @@ void AddDevice(){
     //add a funtion to allow adding from a list or file
 }
 
-void status_checker(){}
+void status_checker(){
+        //ICMP socket based checker or system call based checker
+    for(int a=0; a<i; a++){
+        char command[100];
+        sprintf(command, "ping -n 1 %s", Device_List[a].ip);
+        system(command); //this is a system call based checker
+    }
+
+
+    //icmp socket based implementation
+   /*  int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (sock == INVALID_SOCKET) {
+        printf("Socket creation failed with error: %d\n", WSAGetLastError());
+        return;
+    }                   
+
+    int connection = connect(sock, (struct sockaddr *)&Device_List[a].ip, sizeof(Device_List[a].ip));
+    if (connection == SOCKET_ERROR) {
+        printf("Connection failed with error: %d\n", WSAGetLastError());
+        closesocket(sock);
+        return;
+    } */
+    
+
+}
 
 void retry_edit(){
     char a;
