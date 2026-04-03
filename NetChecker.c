@@ -1,10 +1,21 @@
-#include <stdio.h>
-#include <windows.h> 
+#include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
 #include <winsock2.h>
 #include <windows.h>
 
+
+//function declarations
+void app_interface();
+void edit_deviceList();
+void Add_Device();
+void view();
+void delete_entry();
+int searchbyip(char parameter[15]);
+void FunctionToCheckDevices();
+void alert();
+void retry_edit();
+void exit();
 
 
 
