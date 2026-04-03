@@ -62,11 +62,11 @@ int searchbyip(char parameter[15]){
             if(strcmp(Device_List[b].ip, parameter) == 0){
                 printf("Device Found!!!\n");
                 printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
-                printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[b].name, Device_List[b].ip, Device_List[b].location, Device_List[b].status);
+                printf("\n%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[b].name, Device_List[b].ip, Device_List[b].location, Device_List[b].status);
                 return b;
             }
             else{
-                printf("Device not found, verify that the ip address is correct and try again.");
+                printf("Device not found, verify that the ip address is correct and try again.\n");
                 return -1;
             }
         }
@@ -129,6 +129,7 @@ void app_interface(){
         "4. Search for a Device\n"
         "5. Start Status Checker\n"
     );
+    printf("Type in Your Choice: ");
     scanf("%d", &choice);
 
     if (choice == 1){
@@ -159,11 +160,13 @@ void app_interface(){
 
 void Add_Device(){
     printf("Enter Desired Name: ");
-    fgets(Device_List[i].name, 50, stdin);
+    scanf("%s", Device_List[i].name); //newly added
+    //fgets(Device_List[i].name, 50, stdin);
     printf("\nEnter the IP address of the device: ");
-    scanf("%s", &Device_List[i].ip);
+    scanf("%s", Device_List[i].ip); //changed something here
     printf("\nEnter the location of the device: ");
-    fgets(Device_List[i].location, 50, stdin);
+    scanf("%s", Device_List[i].location);
+    //fgets(Device_List[i].location, 50, stdin);
     i++;
     //add a funtion to allow adding from a list or file
 }
@@ -233,13 +236,13 @@ void edit_deviceList(){
             retry_edit();
         }
 
-        printf("Device information successfully edited");
+        printf("Device information successfully edited\n");
         printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
         printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         app_interface();
     }
     else{
-        printf("Device Not Found!!!");
+        printf("\nDevice Not Found!!!\n");
         retry_edit();
     }    
 }
