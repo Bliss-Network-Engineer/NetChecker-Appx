@@ -44,14 +44,14 @@ int Customdelete(int id){
         return 0;
 }
 
-int searchbyip(char parameter){
+int searchbyip(char parameter[15]){
         //search with name or ip address
         //use regular expression to identify search parameter
         for(int b=0; b<i; b++){
-            if(parameter==Device_List[b].ip){
+            if(strcmp(Device_List[b].ip, parameter) == 0){
                 printf("Device Found!!!\n");
                 printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
-                printf("%c\t\t\t%c\t\t\t%c\t\t\t%c\n", Device_List[b].name, Device_List[b].ip, Device_List[b].location, Device_List[b].status);  
+                printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[b].name, Device_List[b].ip, Device_List[b].location, Device_List[b].status);
                 return b;
             }
             else{
@@ -69,24 +69,24 @@ void view(){
             printf("No device has been added to the list.\n");
         }
         else{
-        printf("%c\t\t\t%c\t\t\t%c\t\t\t%c\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+        printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         }
     }
 }
 
 void delete_entry(){
-            char parameter;
+            char parameter[15];
             char jj;
             printf("Enter the IP address of the device: \n");
-            scanf("%c", &parameter);
+            scanf("%s", parameter);
             int a = searchbyip(parameter);
             //verify whether device not found will be printed after executing the search function
         if(a>=0){
             printf("\nAre you sure you want to delete this device? Enter y or n: ");
-            scanf("%c", jj);
+            scanf(" %c", &jj);
             if(jj=='y'){
                 //create a funtion to automatically delete and readjust the size of the array
-                int dd = CustomDelete(a);
+                int dd = Customdelete(a);
                 if(dd==0){
                     printf("Device successfully deleted!!!");
                 }
@@ -118,19 +118,25 @@ void app_interface(){
         "4. Search for a Device\n"
         "5. Start Status Checker\n"
     );
-    scanf("%d", choice);
+    scanf("%d", &choice);
 
-    if (choice == 1){AddDevice();}
-    else if(choice == 2){edit_entry();}
-    else if(choice == 3){delete_entry();}
+    if (choice == 1){
+        Add_Device();
+    }
+    else if(choice == 2){
+        edit_deviceList();
+    }
+    else if(choice == 3){
+        delete_entry();
+    }
     else if(choice == 4){
-        char address;
+        char address[15];
         printf("\n Enter the IP address: ");
-        scanf("%c", &address);
+        scanf("%s", address);
         searchbyip(address);
     }
     else if(choice == 5){
-        status_checker();
+        FunctionToCheckDevices();
     }
     else{
         printf("Invalid Input!!!");
@@ -140,18 +146,18 @@ void app_interface(){
 
 //void exit(){}
 
-void AddDevice(){
+void Add_Device(){
     printf("Enter Desired Name: ");
     fgets(Device_List[i].name, 50, stdin);
     printf("\nEnter the IP address of the device: ");
-    scanf("%c", &Device_List[i].ip);
+    scanf("%s", &Device_List[i].ip);
     printf("\nEnter the location of the device: ");
     fgets(Device_List[i].location, 50, stdin);
     i++;
     //add a funtion to allow adding from a list or file
 }
 
-void status_checker(){
+void FunctionToCheckDevices(){
         //ICMP socket based checker or system call based checker
     for(int a=0; a<i; a++){
         char command[100];
@@ -181,7 +187,7 @@ void retry_edit(){
     char a;
     printf("Do you want to retry edit? Type y or n: ");
     scanf("%c", &a);
-    if(a == 'y'){edit_entry();}
+    if(a == 'y'){edit_deviceList();}
     else if(a == 'n'){app_interface();}
     else {
         printf("Invalid input!!!"); 
@@ -189,16 +195,16 @@ void retry_edit(){
     }
 }
 
-void edit_entry(){
-        char buff;
-        char address;
+void edit_deviceList(){
+        char buff[7];
+        char address[15];
         printf("\n Enter the IP address of the device: ");
-        scanf("%c", &address); //there is need to remove additional spaces before using parameter
+        scanf("%s", address); //there is need to remove additional spaces before using parameter
         int a = searchbyip(address);
     if (a>=0)
     {
         printf("What do you want to edit? Type name, ip, or location(Don't add any extra space or character): ");
-        scanf("%c", &buff);
+        scanf("%s", &buff);
         if(buff=="name"){
             printf("Enter the new device-name: ");
             fgets(Device_List[a].name, 50, stdin);
@@ -209,7 +215,7 @@ void edit_entry(){
         }
         else if(buff=="ip"){
             printf("Enter the new device-ip: ");
-            scanf("%c", Device_List[a].ip);
+            scanf("%s", Device_List[a].ip);
         }
         else{
             printf("Invalid Input!!!\n");
@@ -218,7 +224,7 @@ void edit_entry(){
 
         printf("Device information successfully edited");
         printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
-        printf("%c\t\t\t%c\t\t\t%c\t\t\t%c\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+        printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         app_interface();
     }
     else{
