@@ -2,8 +2,9 @@
 #include <windows.h> 
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
+
 
 
 
@@ -98,16 +99,16 @@ void delete_entry(){
 
             }
             else if(jj=='n'){
-                main_interface();
+                app_interface();
             };
         }
         else{
             printf("Device not found!!!");
-            main_interface();
+            app_interface();
         }
 }
 
-void main_interface(){
+void app_interface(){
     int choice;
     printf("_____________________Welcome to the NetChecker App________________\n");
     printf("Make your choice of operation, by typing the coresponding number below\n");
@@ -133,7 +134,7 @@ void main_interface(){
     }
     else{
         printf("Invalid Input!!!");
-        main_interface();
+        app_interface();
     }
 }
 
@@ -181,7 +182,7 @@ void retry_edit(){
     printf("Do you want to retry edit? Type y or n: ");
     scanf("%c", &a);
     if(a == 'y'){edit_entry();}
-    else if(a == 'n'){main_interface();}
+    else if(a == 'n'){app_interface();}
     else {
         printf("Invalid input!!!"); 
         retry_edit();
@@ -218,7 +219,7 @@ void edit_entry(){
         printf("Device information successfully edited");
         printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
         printf("%c\t\t\t%c\t\t\t%c\t\t\t%c\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
-        main_interface();
+        app_interface();
     }
     else{
         printf("Device Not Found!!!");
@@ -233,6 +234,6 @@ void alert(){}
 
 
 int main(){
-    main_interface();
+    app_interface();
     return 0;
 }
