@@ -13,7 +13,7 @@ void view();
 void delete_entry();
 int searchbyip(char parameter[15]);
 void FunctionToCheckDevices();
-void alert();
+void send_alert();
 void retry_edit();
 void exit();
 
@@ -74,13 +74,13 @@ int searchbyip(char parameter[15]){
 }
 
 void view(){
-    printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
+    printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
     for(int a=0; a<i; a++){
         if(i==0){
             printf("No device has been added to the list.\n");
         }
         else{
-        printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+        printf("%s\t\t\t%s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         }
     }
 }
@@ -128,6 +128,7 @@ void app_interface(){
         "3. Delete a Device\n"
         "4. Search for a Device\n"
         "5. Start Status Checker\n"
+        "6. View All Entries\n"
     );
     printf("Type in Your Choice: ");
     scanf("%d", &choice);
@@ -150,6 +151,11 @@ void app_interface(){
     else if(choice == 5){
         FunctionToCheckDevices();
     }
+
+    else if(choice == 6){
+        view();
+    }
+
     else{
         printf("Invalid Input!!!");
         app_interface();
@@ -166,18 +172,31 @@ void Add_Device(){
     scanf("%s", Device_List[i].ip); //changed something here
     printf("\nEnter the location of the device: ");
     scanf("%s", Device_List[i].location);
+    strcpy(Device_List[i].status, "Unknown");
     //fgets(Device_List[i].location, 50, stdin);
     i++;
+    view();
+    app_interface();
     //add a funtion to allow adding from a list or file
 }
 
 void FunctionToCheckDevices(){
         //ICMP socket based checker or system call based checker
+    while(1){
     for(int a=0; a<i; a++){
         char command[100];
         sprintf(command, "ping -n 1 %s", Device_List[a].ip);
-        system(command); //this is a system call based checker
+        int feedback = system(command); //this is a system call based checker
+        if (feedback == 0){
+            strcpy(Device_List[a].status, "Active");
+        }
+        else{
+            strcpy(Device_List[a].status, "Not Active");
+            send_alert(Device_List[a].name, Device_List[a].ip, Device_List[a].location);
+        }
+        Sleep(3000);
     }
+   }
 
 
     //icmp socket based implementation
@@ -219,15 +238,16 @@ void edit_deviceList(){
     {
         printf("What do you want to edit? Type name, ip, or location(Don't add any extra space or character): ");
         scanf("%s", &buff);
-        if(buff=="name"){
+        //use regular expression to control what enters the buff
+        if(strcmp(buff,"name")){
             printf("Enter the new device-name: ");
             fgets(Device_List[a].name, 50, stdin);
         }
-        else if (buff=="location"){
+        else if (strcmp(buff, "location")){
             printf("Enter the new device-location: ");
             fgets(Device_List[a].location, 50, stdin);
         }
-        else if(buff=="ip"){
+        else if(strcmp(buff, "ip")){
             printf("Enter the new device-ip: ");
             scanf("%s", Device_List[a].ip);
         }
@@ -236,9 +256,10 @@ void edit_deviceList(){
             retry_edit();
         }
 
-        printf("Device information successfully edited\n");
-        printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
+        printf("\nDevice information successfully edited\n");
+        printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
         printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+
         app_interface();
     }
     else{
@@ -247,13 +268,24 @@ void edit_deviceList(){
     }    
 }
 
-void alert(){}
-
-
-
+void send_alert(char name, char ip, char location){
+        //use a message box
+        char Message[100];
+        //for(int a=0; a<i; a++){
+        //if(strcpy(Device_List[a].status, "Not Active") == 0){
+            sprintf(Message, "Device named %s with IP address %s at %s is Not Active", name, ip, location);
+            MessageBox(NULL, Message, "Alert!!!", MB_ICONEXCLAMATION | MB_OK);
+            Beep(1000, 500);
+        //}
+      // }
+        //ALert title, message body, severity, beep
+}
 
 
 int main(){
+   
     app_interface();
-    return 0;
+    
+    
+    //return 0;
 }
