@@ -3,7 +3,7 @@
 #include <string.h>
 #include <winsock2.h>
 #include <windows.h>
-
+#include <pthread.h>
 
 //function declarations
 void app_interface();
@@ -13,7 +13,7 @@ void view();
 void delete_entry();
 int searchbyip(char parameter[15]);
 void FunctionToCheckDevices();
-void send_alert();
+void send_alert(char name[50], char ip[15], char location[50]);
 void retry_edit();
 void exit();
 void save_file();
@@ -36,7 +36,7 @@ struct Devices{
     char name[50];
     char ip[15];
     char location[50];
-    char status[10]; //{"Active", "Not-Active", "Unknown"} the status value is updated by the status function;
+    char status[20]; //{"Active", "Not-Active", "Unknown"} the status value is updated by the status function;
 };
 
 //Commands Handler
@@ -53,25 +53,28 @@ int Customdelete(int id){
         strcpy(Device_List[x].location, Device_List[x+1].location);
         strcpy(Device_List[x].status, Device_List[x+1].status);
     }
+        save_file();
         return 0;
 }
 
 int searchbyip(char parameter[15]){
         //search with name or ip address
         //use regular expression to identify search parameter
+        if(i==0){
+            printf("No Device in the List. \n");
+            return -1;
+        }
         for(int b=0; b<i; b++){
             if(strcmp(Device_List[b].ip, parameter) == 0){
                 printf("Device Found!!!\n");
-                printf("Device-Name \t\t\t\t IP-Address \t\t\t\t Location \t\t\t\t Status \n\n");
+                printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
                 printf("\n%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[b].name, Device_List[b].ip, Device_List[b].location, Device_List[b].status);
                 return b;
             }
-            else{
-                printf("Device not found, verify that the ip address is correct and try again.\n");
-                return -1;
-            }
+           
         }
-
+        printf("Device not found, verify that the ip address is correct and try again.\n");
+                return -1;
 }
 
 void view(){
@@ -81,7 +84,7 @@ void view(){
             printf("No device has been added to the list.\n");
         }
         else{
-        printf("%s\t\t\t%s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+        printf("%s\t\t\t  %s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         }
     }
 }
@@ -89,7 +92,7 @@ void view(){
 void delete_entry(){
             char parameter[15];
             char jj;
-            printf("Enter the IP address of the device: \n");
+            printf("Enter the IP address of the device: ");
             scanf("%s", parameter);
             int a = searchbyip(parameter);
             //verify whether device not found will be printed after executing the search function
@@ -100,22 +103,25 @@ void delete_entry(){
                 //create a funtion to automatically delete and readjust the size of the array
                 int dd = Customdelete(a);
                 if(dd==0){
-                    printf("Device successfully deleted!!!");
+                    printf("Device successfully deleted!!!\n");
                 }
                 else{
-                    printf("An Error Occurred!!!");
+                    printf("An Error Occurred!!!\n");
                     delete_entry();
                 }
-        
+                save_file();
                 view();
 
             }
             else if(jj=='n'){
+                printf("No changes made.\n\n");
+                save_file();
+                view();
                 app_interface();
             };
         }
         else{
-            printf("Device not found!!!");
+            printf("Device not found!!!\n");
             app_interface();
         }
 }
@@ -176,13 +182,20 @@ void Add_Device(){
     strcpy(Device_List[i].status, "Unknown");
     //fgets(Device_List[i].location, 50, stdin);
     i++;
+    save_file();
+    printf("Device Successfully added!!!\n");
     view();
     app_interface();
+
     //add a funtion to allow adding from a list or file
 }
 
 void FunctionToCheckDevices(){
         //ICMP socket based checker or system call based checker
+        if(i==0){
+            printf("No Device has been added yet!!!\n");
+            app_interface();
+        }
     while(1){
     for(int a=0; a<i; a++){
         char command[100];
@@ -195,6 +208,7 @@ void FunctionToCheckDevices(){
             strcpy(Device_List[a].status, "Not Active");
             send_alert(Device_List[a].name, Device_List[a].ip, Device_List[a].location);
         }
+        save_file();
         Sleep(3000);
     }
    }
@@ -260,16 +274,17 @@ void edit_deviceList(){
         printf("\nDevice information successfully edited\n");
         printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
         printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
-
+        save_file();
         app_interface();
     }
     else{
         printf("\nDevice Not Found!!!\n");
         retry_edit();
+        save_file();
     }    
 }
 
-void send_alert(char name, char ip, char location){
+void send_alert(char name[50], char ip[15], char location[50]){
         //use a message box
         char Message[100];
         //for(int a=0; a<i; a++){
@@ -314,9 +329,9 @@ void open_file(){
 }
 
 int main(){
-   
+    open_file();
     app_interface();
-    
+    save_file();
     
     //return 0;
 }
