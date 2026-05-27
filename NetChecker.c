@@ -16,7 +16,8 @@ void FunctionToCheckDevices();
 void send_alert();
 void retry_edit();
 void exit();
-
+void save_file();
+void open_file();
 
 
 //presentation
@@ -281,6 +282,36 @@ void send_alert(char name, char ip, char location){
         //ALert title, message body, severity, beep
 }
 
+void save_file(){
+    //Save Device list to csv file or db on every change made
+    FILE *f = fopen("Device_List.csv", "w");
+    if (f == NULL) {  
+        printf("Error opening file!\n"); 
+        return; 
+    }   
+    fprintf(f, "Device-Name,IP-Address,Location,Status\n");
+    for(int a=0; a<i; a++){ 
+        fprintf(f, "%s,%s,%s,%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
+    }
+    fclose(f);
+}
+
+void open_file(){
+    //On starting the app, load devices from file
+    FILE *f = fopen("Device_List.csv", "r");
+    if (f == NULL) {
+        printf("No existing device list found. Starting with an empty list.\n");
+        return;
+    }
+    char line[200];
+    fgets(line, sizeof(line), f); // Skip header line
+    while (fgets(line, sizeof(line), f)) {  
+        sscanf(line, "%[^,],%[^,],%[^,],%s", Device_List[i].name, Device_List[i].ip, Device_List[i].location, Device_List[i].status);
+        i++;
+    }
+    fclose(f);
+
+}
 
 int main(){
    
