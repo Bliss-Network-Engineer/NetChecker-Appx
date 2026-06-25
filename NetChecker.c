@@ -12,7 +12,7 @@ void Add_Device();
 void view();
 void delete_entry();
 int searchbyip(char parameter[15]);
-void FunctionToCheckDevices();
+void *FunctionToCheckDevices();
 void send_alert(char name[50], char ip[15], char location[50]);
 void retry_edit();
 void exit();
@@ -29,7 +29,8 @@ void open_file();
 
 //for a in range 0-i
 int function_id_monitor;
-int i=0;
+int i=0; 
+//use a function to update the value of i based on number of devices in the list on launch
 
 
 struct Devices{
@@ -87,6 +88,7 @@ void view(){
         printf("%s\t\t\t  %s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         }
     }
+    app_interface();
 }
 
 void delete_entry(){
@@ -128,7 +130,7 @@ void delete_entry(){
 
 void app_interface(){
     int choice;
-    printf("_____________________Welcome to the NetChecker App________________\n");
+    printf("\n_____________________Welcome to the NetChecker App________________\n");
     printf("Make your choice of operation, by typing the coresponding number below\n");
     printf("1. Add a New Device\n"
         "2. Edit Device Information\n"
@@ -164,8 +166,9 @@ void app_interface(){
     }
 
     else{
-        printf("Invalid Input!!!");
+        printf("Invalid Input!!!\n");
         app_interface();
+       
     }
 }
 
@@ -190,7 +193,7 @@ void Add_Device(){
     //add a funtion to allow adding from a list or file
 }
 
-void FunctionToCheckDevices(){
+void *FunctionToCheckDevices(){
         //ICMP socket based checker or system call based checker
         if(i==0){
             printf("No Device has been added yet!!!\n");
@@ -199,13 +202,13 @@ void FunctionToCheckDevices(){
     while(1){
     for(int a=0; a<i; a++){
         char command[100];
-        sprintf(command, "ping -n 1 %s", Device_List[a].ip);
+        sprintf(command, "ping -n 4 %s", Device_List[a].ip);
         int feedback = system(command); //this is a system call based checker
         if (feedback == 0){
             strcpy(Device_List[a].status, "Active");
         }
         else{
-            strcpy(Device_List[a].status, "Not Active");
+            strcpy(Device_List[a].status, "Not_Active");
             send_alert(Device_List[a].name, Device_List[a].ip, Device_List[a].location);
         }
         save_file();
@@ -213,7 +216,7 @@ void FunctionToCheckDevices(){
     }
    }
 
-
+   return NULL;
     //icmp socket based implementation
    /*  int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (sock == INVALID_SOCKET) {
@@ -238,7 +241,7 @@ void retry_edit(){
     if(a == 'y'){edit_deviceList();}
     else if(a == 'n'){app_interface();}
     else {
-        printf("Invalid input!!!"); 
+        printf("Invalid input!!!\n"); 
         retry_edit();
     }
 }
@@ -299,7 +302,7 @@ void send_alert(char name[50], char ip[15], char location[50]){
 
 void save_file(){
     //Save Device list to csv file or db on every change made
-    FILE *f = fopen("Device_List.csv", "w");
+    FILE *f = fopen("Devices_List.csv", "w");
     if (f == NULL) {  
         printf("Error opening file!\n"); 
         return; 
@@ -313,7 +316,7 @@ void save_file(){
 
 void open_file(){
     //On starting the app, load devices from file
-    FILE *f = fopen("Device_List.csv", "r");
+    FILE *f = fopen("Devices_List.csv", "r");
     if (f == NULL) {
         printf("No existing device list found. Starting with an empty list.\n");
         return;
@@ -333,5 +336,11 @@ int main(){
     app_interface();
     save_file();
     
+    pthread_t monitor_thread;
+    if (pthread_create(&monitor_thread, NULL, (void *)FunctionToCheckDevices, NULL) != 0) {
+        printf("Failed to create monitor thread\n");
+        return 1;
+    }
+
     //return 0;
 }
