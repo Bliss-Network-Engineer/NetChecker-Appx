@@ -90,9 +90,7 @@ void view(){
 
     else{
      for(int a=0; a<i; a++){
-        else{
         printf("%s\t\t\t  %s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
-        }
        }
     }
     app_interface();
@@ -172,11 +170,18 @@ void app_interface(){
     }
 
 else if(choice == 7){
-
+    char bc;
     //before exiting confirm if the choice is corrct
-    //printf("Are you sure you want to exit?  y or n");
+     printf("Are you sure you want to exit?  y or n");
+     scanf(" %c", &bc);
 
+     if(strcmp(bc, 'n')==0){
+        return;
+     }
+
+     else if(strcmp(bc, 'y')==0)
        stop_flag = 1;
+       exit(0);
     }
 
     else{
@@ -237,7 +242,7 @@ void *FunctionToCheckDevices(){
    }
 
    return NULL;
-    //icmp socket based implementation
+   //icmp socket based implementation
    /*  int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (sock == INVALID_SOCKET) {
         printf("Socket creation failed with error: %d\n", WSAGetLastError());
