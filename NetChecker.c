@@ -379,17 +379,6 @@ void *FunctionToCheckDevices(void *arg){
 
 }
 
-/* void retry_edit(){
-    char a;
-    printf("Do you want to retry edit? Type y or n: ");
-    scanf(" %c", &a);
-    if(a == 'y'){edit_deviceList();}
-    else if(a == 'n'){app_interface();}
-    else {
-        printf("Invalid input!!!\n"); 
-        retry_edit();
-    } */
-}
 
 void edit_deviceList(){
         /* char buff[10];
@@ -491,12 +480,11 @@ void edit_deviceList(){
  
     printf("\nDevice information successfully edited\n");
     printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
-    printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n",
-           Device_List[a].name, Device_List[a].ip,
-           Device_List[a].location, Device_List[a].status);
+    printf("%s\t\t\t%s\t\t\t%s\t\t\t%s\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
     pthread_mutex_unlock(&list_lock);
  
     save_file();
+
 }
 
 
@@ -546,6 +534,7 @@ void open_file(){
     }
     char line[300];
     fgets(line, sizeof(line), f); // skip header
+    
     while (fgets(line, sizeof(line), f) && i < MAX_DEVICES) {
         int fields = sscanf(line, "%49[^,],%14[^,],%49[^,],%19[^\r\n]",
                              Device_List[i].name, Device_List[i].ip,
