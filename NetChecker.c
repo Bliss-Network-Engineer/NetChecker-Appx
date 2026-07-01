@@ -30,6 +30,8 @@ void open_file();
 //for a in range 0-i
 int function_id_monitor;
 int i=0; 
+boolean stop_flag =0;
+
 //use a function to update the value of i based on number of devices in the list on launch
 
 
@@ -48,12 +50,13 @@ struct Devices Device_List[100];
 
 int Customdelete(int id){
     
-    for(int x = id; x < i; x++){
+    for(int x = id; x < i-1; x++){
         strcpy(Device_List[x].name, Device_List[x+1].name);
         strcpy(Device_List[x].ip, Device_List[x+1].ip);
         strcpy(Device_List[x].location, Device_List[x+1].location);
         strcpy(Device_List[x].status, Device_List[x+1].status);
-    }
+    }   
+        i--;
         save_file();
         return 0;
 }
@@ -80,13 +83,17 @@ int searchbyip(char parameter[15]){
 
 void view(){
     printf("Device-Name \t\t\t IP-Address \t\t\t Location \t\t\t Status \n\n");
-    for(int a=0; a<i; a++){
-        if(i==0){
+
+    if(i==0){
             printf("No device has been added to the list.\n");
-        }
+    }
+
+    else{
+     for(int a=0; a<i; a++){
         else{
         printf("%s\t\t\t  %s\t\t\t  %s\t\t\t  %s\n\n", Device_List[a].name, Device_List[a].ip, Device_List[a].location, Device_List[a].status);
         }
+       }
     }
     app_interface();
 }
@@ -111,13 +118,11 @@ void delete_entry(){
                     printf("An Error Occurred!!!\n");
                     delete_entry();
                 }
-                save_file();
                 view();
 
             }
             else if(jj=='n'){
                 printf("No changes made.\n\n");
-                save_file();
                 view();
                 app_interface();
             };
@@ -138,6 +143,7 @@ void app_interface(){
         "4. Search for a Device\n"
         "5. Start Status Checker\n"
         "6. View All Entries\n"
+        "7. Exit\n"
     );
     printf("Type in Your Choice: ");
     scanf("%d", &choice);
@@ -158,11 +164,19 @@ void app_interface(){
         searchbyip(address);
     }
     else if(choice == 5){
-        FunctionToCheckDevices();
+        printf("Monitor has been started");
     }
 
     else if(choice == 6){
         view();
+    }
+
+else if(choice == 7){
+
+    //before exiting confirm if the choice is corrct
+    //printf("Are you sure you want to exit?  y or n");
+
+       stop_flag = 1;
     }
 
     else{
@@ -175,16 +189,22 @@ void app_interface(){
 //void exit(){}
 
 void Add_Device(){
+
+    if(i>=100){
+        printf("List is full!!\n");
+        return;
+        //initiating a list expansion will be best
+    }
     printf("Enter Desired Name: ");
-    scanf("%s", Device_List[i].name); //newly added
+    scanf("%49s", Device_List[i].name); //newly added
     //fgets(Device_List[i].name, 50, stdin);
     printf("\nEnter the IP address of the device: ");
-    scanf("%s", Device_List[i].ip); //changed something here
+    scanf("%14s", Device_List[i].ip); //changed something here
     printf("\nEnter the location of the device: ");
-    scanf("%s", Device_List[i].location);
+    scanf("%49s", Device_List[i].location);
     strcpy(Device_List[i].status, "Unknown");
     //fgets(Device_List[i].location, 50, stdin);
-    i++;
+    i++;  //increase number of entries in the list
     save_file();
     printf("Device Successfully added!!!\n");
     view();
@@ -237,7 +257,7 @@ void *FunctionToCheckDevices(){
 void retry_edit(){
     char a;
     printf("Do you want to retry edit? Type y or n: ");
-    scanf("%c", &a);
+    scanf(" %c", &a);
     if(a == 'y'){edit_deviceList();}
     else if(a == 'n'){app_interface();}
     else {
@@ -247,27 +267,27 @@ void retry_edit(){
 }
 
 void edit_deviceList(){
-        char buff[7];
+        char buff[10];
         char address[15];
         printf("\n Enter the IP address of the device: ");
-        scanf("%s", address); //there is need to remove additional spaces before using parameter
+        scanf(" %s", address); //there is need to remove additional spaces before using parameter
         int a = searchbyip(address);
     if (a>=0)
     {
         printf("What do you want to edit? Type name, ip, or location(Don't add any extra space or character): ");
-        scanf("%s", &buff);
+        scanf(" %9s", &buff);
         //use regular expression to control what enters the buff
-        if(strcmp(buff,"name")){
+        if(strcmp(buff,"name")==0){
             printf("Enter the new device-name: ");
             fgets(Device_List[a].name, 50, stdin);
         }
-        else if (strcmp(buff, "location")){
+        else if (strcmp(buff, "location")==0){
             printf("Enter the new device-location: ");
             fgets(Device_List[a].location, 50, stdin);
         }
-        else if(strcmp(buff, "ip")){
+        else if(strcmp(buff, "ip")==0){
             printf("Enter the new device-ip: ");
-            scanf("%s", Device_List[a].ip);
+            scanf(" %s", Device_List[a].ip);
         }
         else{
             printf("Invalid Input!!!\n");
@@ -324,7 +344,7 @@ void open_file(){
     char line[200];
     fgets(line, sizeof(line), f); // Skip header line
     while (fgets(line, sizeof(line), f)) {  
-        sscanf(line, "%[^,],%[^,],%[^,],%s", Device_List[i].name, Device_List[i].ip, Device_List[i].location, Device_List[i].status);
+        sscanf(line, "%[^,],%[^,],%[^,],%[^,]", Device_List[i].name, Device_List[i].ip, Device_List[i].location, Device_List[i].status);
         i++;
     }
     fclose(f);
@@ -333,14 +353,16 @@ void open_file(){
 
 int main(){
     open_file();
-    app_interface();
-    save_file();
+    WSAStartup(MAKEWORD(2,2), &wsa);
     
     pthread_t monitor_thread;
     if (pthread_create(&monitor_thread, NULL, (void *)FunctionToCheckDevices, NULL) != 0) {
         printf("Failed to create monitor thread\n");
         return 1;
     }
-
+    while(1){
+        app_interface();
+        //save_file();
+    }
     //return 0;
 }
