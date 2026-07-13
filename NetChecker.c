@@ -5,6 +5,9 @@
 #include <windows.h>
 #include <pthread.h>
 #include <stdbool.h>
+//#include "alertsystem.c"
+//#include "logs.c"
+
 
 //function declarations
 void app_interface();
@@ -23,6 +26,8 @@ void flush_stdin(void);
 char ask_yes_no(const char *prompt);
 int  read_choice(void);
 
+//let users register their info first
+//update a flag when users register
 
 //presentation
 //input/choice
@@ -33,13 +38,16 @@ int  read_choice(void);
 
 //for a in range 0-i
 
-#define MAX_DEVICES 100 
-int i=0; 
+#define MAX_DEVICES 100
+#define MAX_USERS 5 
+int i=0; //number of registered devices in the system
 bool stop_flag = false;
  
+
 pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_t monitor_thread;
 bool monitor_started = false;
+bool registration_state = false;
 
 //use a function to update the value of i based on number of devices in the list on launch
 
@@ -52,6 +60,12 @@ struct Devices{
 };
 
 
+struct User_Info{
+    char name[50];
+    char email[50];
+    char phone[15];
+};
+ int users = 0; //to monitor the number of users registered.
 
  
 // ---- small input helpers ----
@@ -92,8 +106,157 @@ char ask_yes_no(const char *prompt) {
 //Commands Handler
 
 struct Devices Device_List[MAX_DEVICES];
+struct User_Info User_List[MAX_USERS];
+
 
 //void input_handler(){}
+
+
+//----------------- USERS MANAGEMENT FUNCTIONS -----------------
+
+//if registration state remains false, other functions are not loaded, but redirectes to registration function
+//add a new user function
+//when user list is filled block further users addition.
+//create users management section
+    //users management section include a function to add new users, edit user info, delete users, view users list, and search for users by name or email.
+
+
+void register_user(){
+    //register user info
+    if (users >= MAX_USERS) {
+        printf("User limit reached. Cannot register more than %d users.\n", MAX_USERS);
+        return;
+    }
+
+    printf("Enter your details to register. The information registered will be used in sending you alerts\n");
+    printf("Enter your name: ");
+    read_line(User_List[users].name, sizeof(User_List[users].name)); 
+    printf("Enter your email e.g example@email.com: ");
+    read_line(User_List[users].email, sizeof(User_List[users].email));
+    printf("Enter your phone number e.g +2348000000000: ");
+    read_line(User_List[users].phone, sizeof(User_List[users].phone));
+
+    users++;
+    registration_state = true;
+    printf("Registration successful! Welcome, %s!\n", User_List[users - 1].name);
+}
+
+void edit_users(){
+    //edit user info
+    char email[50];
+    printf("Enter the registered email to edit your information: ");
+    read_line(email, sizeof(email));
+    
+    for (int u = 0; u < users; u++) {
+        if (strcmp(User_List[u].email, email) == 0) {
+            printf("What do you want to edit? Type name, email, or phone: ");
+            char choice[10];
+            read_line(choice, sizeof(choice));
+            
+            if (strcmp(choice, "name") == 0) {
+                printf("Enter the new name: ");
+                read_line(User_List[u].name, sizeof(User_List[u].name));
+            } else if (strcmp(choice, "email") == 0) {
+                printf("Enter the new email: ");
+                read_line(User_List[u].email, sizeof(User_List[u].email));
+            } else if (strcmp(choice, "phone") == 0) {
+                printf("Enter the new phone number: ");
+                read_line(User_List[u].phone, sizeof(User_List[u].phone));
+            } else {
+                printf("Invalid choice.\n");
+            }
+            return;
+        }
+    }
+    printf("User not found.\n");
+}
+
+
+void delete_user(){
+    //delete user info
+    char email[50];
+    printf("Enter the registered email to delete: ");
+    read_line(email, sizeof(email));
+    
+    for (int u = 0; u < users; u++) {
+        if (strcmp(User_List[u].email, email) == 0) {
+            for (int j = u; j < users - 1; j++) {
+                User_List[j] = User_List[j + 1];
+            }
+            users--;
+            printf("User information deleted successfully.\n");
+            return;
+        }
+    }
+    printf("User not found.\n");
+}
+
+
+void view_users(){
+    //view users list
+    printf("Registered Users:\n");
+    printf("Name\t\tEmail\t\tPhone\n");
+    for (int u = 0; u < users; u++) {
+        printf("%s\t%s\t%s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
+    }
+}
+
+\
+void search_user(){
+    //search for users by name or email
+    char parameter[50];
+    printf("Enter the name or email to search: ");
+    read_line(parameter, sizeof(parameter));
+    
+    for (int u = 0; u < users; u++) {
+        if (strstr(User_List[u].name, parameter) != NULL || strstr(User_List[u].email, parameter) != NULL) {
+            printf("User Found:\n");
+            printf("Name: %s\nEmail: %s\nPhone: %s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
+            return;
+        }
+    }
+    printf("User not found.\n");
+}
+
+void Users_management_menu(){
+    
+    printf("\nUsers Management Menu:\n");
+    printf("1. Register a New User\n");
+    printf("2. Edit User Information\n");
+    printf("3. Delete a User\n");
+    printf("4. View All Users\n");
+    printf("5. Search for a User\n");
+    printf("6. Return to Main Menu\n");
+
+    int choice = read_choice();
+    
+    switch (choice) {
+        case 1:
+            register_user();
+            break;
+        case 2:
+            edit_users();
+            break;
+        case 3:
+            delete_user();
+            break;
+        case 4:
+            view_users();
+            break;
+        case 5:
+            search_user();
+            break;
+        case 6:
+            return; // Return to main menu
+        default:
+            printf("Invalid Input!!!\n");
+            break;
+    }
+}
+    
+    
+//------------- USERS MANAGEMENT FUNTIONS END ------------------
+
 
 int Customdelete(int id){
     
@@ -194,8 +357,13 @@ void app_interface(){
            "4. Search for a Device\n"
            "5. Start Status Checker\n"
            "6. View All Entries\n"
-           "7. Exit\n");
+           "7. Users Management\n"
+           "8. More\n"
+           "9. Exit\n");
  
+
+            //users management section
+            //register new user section
     int choice = read_choice();
  
     switch (choice) {
@@ -230,7 +398,15 @@ void app_interface(){
         case 6:
             view();
             break;
-        case 7: {
+
+        case 7:
+            Users_management_menu();
+            break;
+        case 8:
+            printf("More options are not implemented yet. Additional functions will show up here\n");
+            break;
+
+        case 9: {
             char bc = ask_yes_no("Are you sure you want to exit? y or n: ");
             if (bc == 'y') {
                 stop_flag = true;
@@ -548,12 +724,33 @@ void open_file(){
 }
 
 int main(){
-    open_file();
-    //WSAStartup(MAKEWORD(2,2), &wsa);
 
-while(1){
-        app_interface();
-        //save_file();
-    }
+        if (registration_state == false){
+            printf("Kindly register your information to continue using the app\n");
+            register_user();
+            
+            //welcome the user, introduce the app, then open the app-interface
+
+            //Introduction to the app, and its features, then open the app-interface
+            printf("\nWelcome to the NetChecker App, %s! \nThis application allows you to monitor the status of your network devices. You can add devices, edit their information, \ndelete them, and check their status in real-time. \nThe app will also alert you if any device becomes inactive.\n", User_List[users - 1].name);
+
+            while(1){
+                app_interface();
+            }
+        }
+
+
+        //sign in users, to know which user is active
+        else{
+            printf("Welcome back, %s, what's new?\n", User_List[0].name);
+        
+            open_file();
+    
+            while(1){
+                app_interface();
+        
+             }
+        }
+
     return 0;
 }
