@@ -218,8 +218,7 @@ void search_user(){
     printf("User not found.\n");
 }
 
-void Users_management_menu(){
-    
+void Users_management_menu(){  
     printf("\nUsers Management Menu:\n");
     printf("1. Register a New User\n");
     printf("2. Edit User Information\n");
@@ -538,23 +537,11 @@ void *FunctionToCheckDevices(void *arg){
     return NULL;
 
 
-   //icmp socket based implementation
-   /*  int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (sock == INVALID_SOCKET) {
-        printf("Socket creation failed with error: %d\n", WSAGetLastError());
-        return;
-    }                   
+    //icmp socket based implementation
+    //int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 
-    int connection = connect(sock, (struct sockaddr *)&Device_List[a].ip, sizeof(Device_List[a].ip));
-    if (connection == SOCKET_ERROR) {
-        printf("Connection failed with error: %d\n", WSAGetLastError());
-        closesocket(sock);
-        return;
-    } */
-    
-
+        
 }
-
 
 void edit_deviceList(){
         /* char buff[10];
@@ -673,8 +660,7 @@ void send_alert(char name[50], char ip[15], char location[50]){
             sprintf(Message, "Device named %s with IP address %s at %s is Not Active", name, ip, location);
             MessageBox(NULL, Message, "Alert!!!", MB_ICONEXCLAMATION | MB_OK);
             Beep(1000, 500);
-        //}
-      // }
+        
         //ALert title, message body, severity, beep
 }
 
