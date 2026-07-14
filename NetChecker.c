@@ -17,8 +17,8 @@ void view();
 void delete_entry();
 int searchbyip(char parameter[15]);
 void *FunctionToCheckDevices();
-void send_alert(char name[50], char ip[15], char location[50]);
-void retry_edit();
+void send_alert(char name[50], char ip[15], char location[50], char status[20]);
+//void retry_edit();
 void save_file();
 void open_file();
 void read_line(char *buffer, int size);
@@ -506,7 +506,11 @@ void *FunctionToCheckDevices(void *arg){
             char ip_copy[15];
             char name_copy[50];
             char location_copy[50];
- 
+            
+            //store previous status to send alerts only when status changes
+            char previous_status[20];
+            
+
             pthread_mutex_lock(&list_lock);
             if (a >= i) { // list shrank since we grabbed `count`
                 pthread_mutex_unlock(&list_lock);
@@ -515,20 +519,34 @@ void *FunctionToCheckDevices(void *arg){
             strcpy(ip_copy, Device_List[a].ip);
             strcpy(name_copy, Device_List[a].name);
             strcpy(location_copy, Device_List[a].location);
+            strcpy(previous_status, Device_List[a].status);
             pthread_mutex_unlock(&list_lock);
  
             char command[100];
             sprintf(command, "ping -n 2 -w 1000 %s >nul", ip_copy);
             int feedback = system(command);
- 
+            
+            
+
             pthread_mutex_lock(&list_lock);
             if (a < i && strcmp(Device_List[a].ip, ip_copy) == 0) {
                 strcpy(Device_List[a].status, feedback == 0 ? "Active" : "Not_Active");
             }
             pthread_mutex_unlock(&list_lock);
  
+                //send alerts when there is a downtime
             if (feedback != 0) {
-                send_alert(name_copy, ip_copy, location_copy);
+                    //send alert only when the prvious status is not 'not-active'
+                if(strcmp(previous_status, "Not_Active")!=0){  
+                    send_alert(name_copy, ip_copy, location_copy, Device_List[a].status);
+                }
+            }
+
+            //send alerts when status changes from not-active to active
+            if (feedback == 0){
+                if(strcmp(previous_status, "Not_Active")==0){
+                    send_alert(name_copy, ip_copy, location_copy, Device_List[a].status);
+                }
             }
         }
         save_file();
@@ -652,12 +670,12 @@ void edit_deviceList(){
 
 
 
-void send_alert(char name[50], char ip[15], char location[50]){
+void send_alert(char name[50], char ip[15], char location[50], char status[20]){
         //use a message box
         char Message[200];
         //for(int a=0; a<i; a++){
         //if(strcpy(Device_List[a].status, "Not Active") == 0){
-            sprintf(Message, "Device named %s with IP address %s at %s is Not Active", name, ip, location);
+            sprintf(Message, "Device named %s with IP address %s at %s is %s", name, ip, location, status);
             MessageBox(NULL, Message, "Alert!!!", MB_ICONEXCLAMATION | MB_OK);
             Beep(1000, 500);
         
