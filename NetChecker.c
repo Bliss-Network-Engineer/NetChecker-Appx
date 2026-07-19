@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <conio.h>
 //#include "alertsystem.c"
 //#include "logs.c"
 
@@ -25,9 +26,14 @@ void read_line(char *buffer, int size);
 void flush_stdin(void);
 char ask_yes_no(const char *prompt);
 int  read_choice(void);
-
+void Loginpage();
 //let users register their info first
 //update a flag when users register
+
+ 
+
+
+
 
 //presentation
 //input/choice
@@ -39,7 +45,8 @@ int  read_choice(void);
 //for a in range 0-i
 
 #define MAX_DEVICES 100
-#define MAX_USERS 5 
+#define MAX_USERS 5
+#define MAX_PASSWORD_LENGTH 64
 int i=0; //number of registered devices in the system
 bool stop_flag = false;
  
@@ -59,13 +66,20 @@ struct Devices{
     char status[20]; //{"Active", "Not-Active", "Unknown"} the status value is updated by the status function;
 };
 
+/* struct Settings {
+    bool registered;
+    char username[50];
+    char email[50];
+    char phone[15];
+} */
 
 struct User_Info{
     char name[50];
     char email[50];
     char phone[15];
 };
- int users = 0; //to monitor the number of users registered.
+
+int users = 0; //to monitor the number of users registered.
 
  
 // ---- small input helpers ----
@@ -107,7 +121,7 @@ char ask_yes_no(const char *prompt) {
 
 struct Devices Device_List[MAX_DEVICES];
 struct User_Info User_List[MAX_USERS];
-
+//struct Settings settings[MAX_USERS];
 
 //void input_handler(){}
 
@@ -120,6 +134,38 @@ struct User_Info User_List[MAX_USERS];
 //create users management section
     //users management section include a function to add new users, edit user info, delete users, view users list, and search for users by name or email.
 
+    void saveUsers(){
+        FILE *fp = fopen("users.csv", "w");
+        fprintf(fp, "User-Name,Email,Phone-Number\n");
+      for (int a = 0; a < 5; a++) {
+        fprintf(fp, "%s,%s,%s\n",
+                User_List[a].name, User_List[a].email,
+                User_List[a].phone);
+
+       }  
+       
+        registration_state = TRUE;
+        fclose(fp);
+    }
+
+
+    void readUsers(){
+        FILE *fO = fopen("users.csv", "r");
+        if(fO != NULL){
+            registration_state = true;
+        }
+
+        char line[300];
+
+        for(int u =1; u < MAX_USERS; u++){
+          fgets(line, sizeof(line), fO); // skip header
+             sscanf(line, "%49[^,],%49[^,],%14[^\r\n]",
+                             User_List[u].name, User_List[u].email,
+                             User_List[u].phone);
+        }
+        fclose(fO);
+        
+    }
 
 void register_user(){
     //register user info
@@ -139,6 +185,7 @@ void register_user(){
     users++;
     registration_state = true;
     printf("Registration successful! Welcome, %s!\n", User_List[users - 1].name);
+    saveUsers();
 }
 
 void edit_users(){
@@ -168,6 +215,7 @@ void edit_users(){
             return;
         }
     }
+    saveUsers();
     printf("User not found.\n");
 }
 
@@ -188,16 +236,17 @@ void delete_user(){
             return;
         }
     }
+    saveUsers();
     printf("User not found.\n");
 }
 
 
 void view_users(){
     //view users list
-    printf("Registered Users:\n");
-    printf("Name\t\tEmail\t\tPhone\n");
-    for (int u = 0; u < users; u++) {
-        printf("%s\t%s\t%s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
+    printf("\nRegistered Users:\n");
+    printf("\nName\t\tEmail\t\tPhone\n");
+    for (int u = 1; u < users; u++) {
+        printf("%49s\t%49s\t%14s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
     }
 }
 
@@ -205,13 +254,13 @@ void view_users(){
 void search_user(){
     //search for users by name or email
     char parameter[50];
-    printf("Enter the name or email to search: ");
+    printf("\nEnter the name or email to search: ");
     read_line(parameter, sizeof(parameter));
     
-    for (int u = 0; u < users; u++) {
+    for (int u = 1; u < users; u++) {
         if (strstr(User_List[u].name, parameter) != NULL || strstr(User_List[u].email, parameter) != NULL) {
             printf("User Found:\n");
-            printf("Name: %s\nEmail: %s\nPhone: %s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
+            printf("\nName: %s\nEmail: %s\nPhone: %s\n", User_List[u].name, User_List[u].email, User_List[u].phone);
             return;
         }
     }
@@ -226,6 +275,7 @@ void Users_management_menu(){
     printf("4. View All Users\n");
     printf("5. Search for a User\n");
     printf("6. Return to Main Menu\n");
+    //add password management
 
     int choice = read_choice();
     
@@ -343,6 +393,7 @@ int read_choice(void) {
     char buf[16];
     printf("Type in Your Choice: ");
     read_line(buf, sizeof(buf));
+    
     return atoi(buf); // returns 0 on non-numeric input, which falls through to "Invalid Input"
 }
 
@@ -364,7 +415,7 @@ void app_interface(){
             //users management section
             //register new user section
     int choice = read_choice();
- 
+        //printf("DEBUG: choice = %d\n", choice);
     switch (choice) {
         case 1:
             Add_Device();
@@ -523,7 +574,7 @@ void *FunctionToCheckDevices(void *arg){
             pthread_mutex_unlock(&list_lock);
  
             char command[100];
-            sprintf(command, "ping -n 2 -w 1000 %s >nul", ip_copy);
+            sprintf(command, "ping -n 3 -w 1000 %s >nul", ip_copy);
             int feedback = system(command);
             
             
@@ -550,7 +601,7 @@ void *FunctionToCheckDevices(void *arg){
             }
         }
         save_file();
-        Sleep(3000);
+        Sleep(5000);
     }
     return NULL;
 
@@ -727,8 +778,75 @@ void open_file(){
     fclose(f);
 }
 
+    char password[MAX_PASSWORD_LENGTH] = "netchecker123";
+
+    /* void getPassword(char password1[], int maxLength){
+            int v =0; 
+            char ch;
+
+            while(1){
+                ch = getchar();
+
+                if(ch == '\r'){
+                    password1[v]= '\0';
+                    printf("\n");
+                    break;
+                }
+
+                else if(ch == '\b' && v > 0){
+                    v--;
+                    printf("\b \b");
+                }
+
+                else if( v < maxLength - 1){
+                    password1[v++] = ch;
+                    printf("*");
+                }
+            }
+    } */
+
+void SignIn(const char *username, const char *upassword){    
+
+        for(int b = 0; b< MAX_USERS; b++){
+            int tt = strcmp(username, User_List[b].name);
+            int uu = strcmp(password, upassword);
+                if( uu ==0 && tt == 0){
+                     printf("\nSign In successful.\n Welcome back, %s. What's new?\n\n", username);
+                     return;
+                }
+
+            }   
+            printf("Invalid user or password. Try again.\n");
+            Loginpage();
+        
+    }
+
+    //Login page
+     
+void Loginpage(){
+
+            char usernamecheck[50];
+            char passwordcheck[MAX_PASSWORD_LENGTH];
+
+            printf("Enter username: ");
+            fgets(usernamecheck, 50, stdin);
+            usernamecheck[strcspn(usernamecheck, "\n")] = '\0';
+
+            printf("Enter your password: ");
+            fgets(passwordcheck, sizeof(passwordcheck), stdin);
+            passwordcheck[strcspn(passwordcheck, "\n")] = '\0';
+
+            SignIn(usernamecheck, passwordcheck);
+        }
+
+
 int main(){
 
+        
+            //Signin
+
+
+            readUsers();
         if (registration_state == false){
             printf("Kindly register your information to continue using the app\n");
             register_user();
@@ -736,7 +854,7 @@ int main(){
             //welcome the user, introduce the app, then open the app-interface
 
             //Introduction to the app, and its features, then open the app-interface
-            printf("\nWelcome to the NetChecker App, %s! \nThis application allows you to monitor the status of your network devices. You can add devices, edit their information, \ndelete them, and check their status in real-time. \nThe app will also alert you if any device becomes inactive.\n", User_List[users - 1].name);
+            printf("\nWelcome to the NetChecker App, %s! \nThis application allows you to monitor the status of your network devices. You can add devices, edit their information, \ndelete them, and check their status in real-time. \nThe app will also alert you if any device becomes inactive.\n\n", User_List[users - 1].name);
 
             while(1){
                 app_interface();
@@ -746,8 +864,9 @@ int main(){
 
         //sign in users, to know which user is active
         else{
-            printf("Welcome back, %s, what's new?\n", User_List[0].name);
-        
+            
+            Loginpage();
+
             open_file();
     
             while(1){
